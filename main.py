@@ -6,38 +6,44 @@ from googlesearch import search
 
 
 def find(question):
-    # going through the hits and appending them to list
-    for hit in search(question, num=10, stop=1, pause=2):
-        urls.append(hit)
-
     # going through the urls
-    for i in urls:
-        # test to see if the url is valid exits on a failure
+    for url in search(question, num=10, stop=1, pause=2):
+        # A test to see if it is a quizlet link
+        if "quizlet" not in url:
+            print("This link is not a quizlet link")
+            continue
+
+        # test the link to see if its valid
         try:
-            r = requests.get(i)
+            r = requests.get(url)
         except:
             continue
 
+        # running soup saves the html locally for analysis
         soup = BeautifulSoup(r.content, 'html5lib')
 
-        terms = soup.findAll('div', attrs={'class': '"TermText"'})
-        answers = soup.findAll('a', attrs={'class': '"SetPageTerm-definitionText"'})
+        # getting my list of terms and my list of answers
+        all_terms = soup.findAll('div', attrs={'class': '"TermText"'})
+        split_term = []
+        for i in range(0, len(all_terms), 2):
+            try:
+                temp = all_terms[i], all_terms[i+1]
+                split_term.append(temp)
+            except:
+                break
 
-        for i in range(len(terms)):
-            if terms[i] == question:
-                return answers[i]
+        for combination in split_term:
+            if question == combination[0]:
+                return combination[1]
+            if question == combination[1]:
+                return combination[0]
 
-            if terms[i].replace("_", "").replace(" ", "").replace("?", "") == \
-                    question.replace("_", "").replace(" ", "").replace("?", ""):
-                return answers[i]
-
-            if answers[i].replace("_", "").replace(" ", "").replace("?", "") == \
-                    question.replace("_", "").replace(" ", "").replace("?", ""):
-                return answers[i]
-            
-            if answers[i] == question:
-                return terms[i]
-
+            if question.replace(" ", "").replace("_", "").replace("?", "") == \
+                    combination[0].replace(" ", "").replace("_", "").replace("?", ""):
+                return combination[1]
+            if question.replace(" ", "").replace("_", "").replace("?", "") == \
+                    combination[1].replace(" ", "").replace("_", "").replace("?", ""):
+                return combination[0]
 
 
 if __name__ == "__main__":

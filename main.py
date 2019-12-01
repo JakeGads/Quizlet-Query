@@ -12,11 +12,14 @@ def find(question):
         if "quizlet" not in url:
             print("This link is not a quizlet link")
             continue
+        else:
+            print("Testing quizlet Link")
 
         # test the link to see if its valid
         try:
             r = requests.get(url)
         except:
+            print("Request Failed")
             continue
 
         # running soup saves the html locally for analysis
@@ -33,6 +36,7 @@ def find(question):
                 break
 
         for combination in split_term:
+            print("Checking ", combination, "for a match ")
             if question == combination[0]:
                 return combination[1]
             if question == combination[1]:

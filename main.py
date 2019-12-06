@@ -1,13 +1,15 @@
 import requests, re
-from bs4 import BeautifulSoup 
+from bs4 import BeautifulSoup
 from googlesearch import search
 
-# TODO Test on Separate System
 
+# May error out on mac's
+
+# https://repl.it/@DevinShende/Quizlet-Scraper
 
 def find(question):
     # going through the urls
-    for url in search(question, num=10, stop=1, pause=2):
+    for url in list(search(question, num=35, stop=1, pause=2)):
         # A test to see if it is a quizlet link
         if "quizlet" not in url:
             print("This link is not a quizlet link")
@@ -22,32 +24,27 @@ def find(question):
             print("Request Failed")
             continue
 
-        # running soup saves the html locally for analysis
-        soup = BeautifulSoup(r.content, 'html5lib')
+        # https://quizlet.com/462418579/security6-7quizes-flash-cards/?x=1qqt
+        # Aditya is attempting to classify information regarding a new project that his organization will undertake in
+        # secret. Which characteristic is NOT normally used to make these type of classification decisions?
 
-        # getting my list of terms and my list of answers
-        all_terms = soup.findAll('div', attrs={'class': '"TermText"'})
-        split_term = []
-        for i in range(0, len(all_terms), 2):
-            try:
-                temp = all_terms[i], all_terms[i+1]
-                split_term.append(temp)
-            except:
-                break
+        html = requests.get(url).text
+        soup = BeautifulSoup(html, "html.parser")
 
-        for combination in split_term:
-            print("Checking ", combination, "for a match ")
-            if question == combination[0]:
-                return combination[1]
-            if question == combination[1]:
-                return combination[0]
+        data = []  # data will be a list containing many dicts with term and definition keys
+        content = soup.select("div.SetPage-terms")[0]
+        pairs = content.select("div.SetPageTerm-content")
+        for pair in pairs:
+            term = pair.select("span.TermText")[0].get_text()
+            defn = pair.select("span.TermText")[1].get_text()
+            data.append({
+                "term": term,
+                "definition": defn
+            })
 
-            if question.replace(" ", "").replace("_", "").replace("?", "") == \
-                    combination[0].replace(" ", "").replace("_", "").replace("?", ""):
-                return combination[1]
-            if question.replace(" ", "").replace("_", "").replace("?", "") == \
-                    combination[1].replace(" ", "").replace("_", "").replace("?", ""):
-                return combination[0]
+        for key, value in data:
+            
+        return data
 
 
 if __name__ == "__main__":
@@ -56,9 +53,9 @@ if __name__ == "__main__":
         urls = []
 
         # the question for the google search
-        query = input("Enter your question")
+        query = input("Enter your question\nn forces an exit\t")
 
         if query.lower() != "n":
-            find(query)
+            print(find(query))
         else:
             break
